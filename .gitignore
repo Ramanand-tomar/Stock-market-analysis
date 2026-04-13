@@ -1,0 +1,36 @@
+# Environment
+backend/.env
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# ML artifacts (large files)
+ml/models/regression/*.pkl
+ml/models/classification/*.pkl
+ml/models/clustering/*.pkl
+ml/models/scaler.pkl
+ml/models/label_encoders.pkl
+ml/data/processed/*.parquet
+
+# Node
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

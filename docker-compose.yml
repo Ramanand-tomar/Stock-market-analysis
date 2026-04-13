@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env
+    environment:
+      ML_MODELS_DIR: /ml/models
+      ML_DATA_DIR: /ml/data/processed
+    volumes:
+      - ./ml:/ml:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  ml:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+    volumes:
+      - ./ml:/ml
+      - ./Dataset:/ml/Dataset:ro
+    profiles:
+      - training
+    command: python -m ml.train.run_training
+
+volumes: {}
