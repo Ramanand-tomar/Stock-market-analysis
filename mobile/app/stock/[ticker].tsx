@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -64,9 +65,9 @@ export default function StockDetailScreen() {
 
   if (stockLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -77,9 +78,11 @@ export default function StockDetailScreen() {
           headerShown: true,
           headerStyle: { backgroundColor: Colors.background },
           headerTintColor: Colors.text,
+          headerTitleAlign: 'center',
+          headerShadowVisible: false,
           title: ticker?.replace('.NS', '') || '',
           headerRight: () => (
-            <Pressable onPress={toggleWatchlist} style={{ marginRight: 8 }}>
+            <Pressable onPress={toggleWatchlist} style={{ padding: 4 }}>
               <Ionicons
                 name={isWatched ? 'star' : 'star-outline'}
                 size={24}

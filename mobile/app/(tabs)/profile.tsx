@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/theme';
@@ -8,7 +9,7 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.avatar}>
         <Ionicons name="person-circle" size={80} color={Colors.primaryLight} />
       </View>
@@ -35,12 +36,12 @@ export default function ProfileScreen() {
         <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
         <Text style={styles.logoutText}>Logout</Text>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background, padding: Spacing.xxl, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: Colors.background, padding: Spacing.xxl, paddingTop: Spacing.sm, alignItems: 'center' },
   avatar: { marginTop: Spacing.xxxl, marginBottom: Spacing.md },
   username: { color: Colors.text, fontSize: FontSize.xxl, fontWeight: '800' },
   email: { color: Colors.textSecondary, fontSize: FontSize.md, marginBottom: Spacing.xxl },

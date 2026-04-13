@@ -112,9 +112,21 @@ def predict(ticker: str) -> dict | None:
         result["cached"] = True
         return result
 
-    features = get_latest_features(ticker)
+    # Handle .NS suffix for Nifty 50 stocks if missing
+    if not ticker.endswith(".NS"):
+        features = get_latest_features(f"{ticker}.NS")
+        if features is not None:
+            ticker = f"{ticker}.NS"
+    else:
+        features = get_latest_features(ticker)
+
     if features is None:
-        return None
+        # Final fallback check with original ticker if get_latest_features didn't already do it
+        if not ticker.endswith(".NS"):
+             features = get_latest_features(ticker)
+        
+        if features is None:
+            return None
 
     # Load best models
     reg_name = _get_best_model_name("regression")

@@ -60,6 +60,7 @@ client.interceptors.response.use(
       const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
         refresh_token: refreshToken,
       });
+      console.log(data);
 
       const { access_token, refresh_token } = data;
       store.dispatch(setCredentials({ accessToken: access_token, refreshToken: refresh_token }));

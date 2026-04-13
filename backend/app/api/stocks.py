@@ -43,8 +43,14 @@ async def list_stocks(
 
 @router.get("/{ticker}", response_model=StockResponse)
 async def get_stock(ticker: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Stock).where(Stock.ticker == ticker))
+    result = await db.execute(select(Stock).where(Stock.ticker == ticker.upper()))
     stock = result.scalar_one_or_none()
+    
+    # Try with .NS suffix if not found
+    if stock is None and not ticker.upper().endswith(".NS"):
+        result = await db.execute(select(Stock).where(Stock.ticker == f"{ticker.upper()}.NS"))
+        stock = result.scalar_one_or_none()
+        
     if stock is None:
         raise HTTPException(status_code=404, detail=f"Ticker {ticker} not found")
     return stock

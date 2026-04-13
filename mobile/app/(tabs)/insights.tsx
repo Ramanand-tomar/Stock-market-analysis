@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getClusters, getPCA, type Cluster, type PCAPoint } from '../../api/insights';
 import ClusterCard from '../../components/ClusterCard';
 import PCAScatterPlot from '../../components/PCAScatterPlot';
@@ -33,60 +34,62 @@ export default function InsightsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>ML Insights</Text>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.heading}>ML Insights</Text>
 
-      {/* Toggle */}
-      <View style={styles.toggleRow}>
-        {(['clusters', 'pca'] as ViewMode[]).map((v) => (
-          <Pressable
-            key={v}
-            style={[styles.toggle, view === v && styles.toggleActive]}
-            onPress={() => setView(v)}
-          >
-            <Text style={[styles.toggleText, view === v && styles.toggleTextActive]}>
-              {v === 'clusters' ? 'Clusters' : 'PCA Map'}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {loading ? (
-        <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
-      ) : error ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{error}</Text>
-          <Pressable style={styles.retryBtn} onPress={fetchData}>
-            <Text style={styles.retryText}>Retry</Text>
-          </Pressable>
+        {/* Toggle */}
+        <View style={styles.toggleRow}>
+          {(['clusters', 'pca'] as ViewMode[]).map((v) => (
+            <Pressable
+              key={v}
+              style={[styles.toggle, view === v && styles.toggleActive]}
+              onPress={() => setView(v)}
+            >
+              <Text style={[styles.toggleText, view === v && styles.toggleTextActive]}>
+                {v === 'clusters' ? 'Clusters' : 'PCA Map'}
+              </Text>
+            </Pressable>
+          ))}
         </View>
-      ) : view === 'clusters' ? (
-        <>
-          <Text style={styles.subtitle}>
-            {Object.keys(clusters).length} clusters across {
-              Object.values(clusters).reduce((sum, c) => sum + c.count, 0)
-            } stocks
-          </Text>
-          {Object.values(clusters)
-            .sort((a, b) => a.cluster_id - b.cluster_id)
-            .map((cluster) => (
-              <ClusterCard key={cluster.cluster_id} cluster={cluster} />
-            ))}
-        </>
-      ) : (
-        <>
-          <Text style={styles.subtitle}>
-            49 stocks projected onto 2 principal components, colored by sector
-          </Text>
-          <PCAScatterPlot points={pcaPoints} />
-        </>
-      )}
-    </ScrollView>
+
+        {loading ? (
+          <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
+        ) : error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{error}</Text>
+            <Pressable style={styles.retryBtn} onPress={fetchData}>
+              <Text style={styles.retryText}>Retry</Text>
+            </Pressable>
+          </View>
+        ) : view === 'clusters' ? (
+          <>
+            <Text style={styles.subtitle}>
+              {Object.keys(clusters).length} clusters across {
+                Object.values(clusters).reduce((sum, c) => sum + c.count, 0)
+              } stocks
+            </Text>
+            {Object.values(clusters)
+              .sort((a, b) => a.cluster_id - b.cluster_id)
+              .map((cluster) => (
+                <ClusterCard key={cluster.cluster_id} cluster={cluster} />
+              ))}
+          </>
+        ) : (
+          <>
+            <Text style={styles.subtitle}>
+              49 stocks projected onto 2 principal components, colored by sector
+            </Text>
+            <PCAScatterPlot points={pcaPoints} />
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: Colors.background, paddingTop: Spacing.sm },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
   heading: { color: Colors.text, fontSize: FontSize.xxl, fontWeight: '800', marginBottom: Spacing.lg },
   subtitle: { color: Colors.textSecondary, fontSize: FontSize.sm, marginBottom: Spacing.lg },

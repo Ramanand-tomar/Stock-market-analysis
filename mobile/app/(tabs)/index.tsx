@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
@@ -14,6 +15,7 @@ export default function ExploreScreen() {
   const { list, loading, error } = useSelector((s: RootState) => s.stocks);
   const [search, setSearch] = useState('');
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchStocks();
@@ -25,8 +27,14 @@ export default function ExploreScreen() {
       const { data } = await getStocks(1, 100);
       dispatch(setStocks({ items: data.items, total: data.total }));
     } catch (err: any) {
-      dispatch(setStocksError(err.message));
+      dispatch(setStocksError(err.response?.data?.detail || err.message));
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchStocks();
+    setRefreshing(false);
   };
 
   const sectors = useMemo(() => {
@@ -49,7 +57,7 @@ export default function ExploreScreen() {
   }, [list, search, selectedSector]);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <TextInput
         style={styles.search}
         placeholder="Search by ticker or company..."
@@ -57,25 +65,27 @@ export default function ExploreScreen() {
         value={search}
         onChangeText={setSearch}
       />
-
+      
       {/* Sector chips */}
-      <FlatList
-        horizontal
-        data={[null, ...sectors]}
-        keyExtractor={(item) => item || 'all'}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipRow}
-        renderItem={({ item }) => (
-          <Pressable
-            style={[styles.chip, selectedSector === item && styles.chipActive]}
-            onPress={() => setSelectedSector(item)}
-          >
-            <Text style={[styles.chipText, selectedSector === item && styles.chipTextActive]}>
-              {item || 'All'}
-            </Text>
-          </Pressable>
-        )}
-      />
+      <View style={styles.chipRowContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipRow}
+        >
+          {[null, ...sectors].map((item) => (
+            <Pressable
+              key={item || 'all'}
+              style={[styles.chip, selectedSector === item && styles.chipActive]}
+              onPress={() => setSelectedSector(item)}
+            >
+              <Text style={[styles.chipText, selectedSector === item && styles.chipTextActive]}>
+                {item || 'All'}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
 
       {loading ? (
         <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
@@ -94,15 +104,25 @@ export default function ExploreScreen() {
             />
           )}
           contentContainerStyle={styles.list}
-          ListEmptyComponent={<Text style={styles.emptyText}>No stocks found</Text>}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No stocks found</Text>
+              <Pressable style={styles.retryBtn} onPress={fetchStocks}>
+                <Text style={styles.retryText}>Retry</Text>
+              </Pressable>
+            </View>
+          }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: Colors.background, paddingTop: Spacing.sm },
   search: {
     backgroundColor: Colors.surface,
     color: Colors.text,
@@ -113,20 +133,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  chipRow: { paddingHorizontal: Spacing.lg, gap: Spacing.sm, marginBottom: Spacing.md },
+  chipRowContainer: { marginBottom: Spacing.md },
+  chipRow: { paddingHorizontal: Spacing.lg },
   chip: {
-    backgroundColor: Colors.surface,
-    paddingHorizontal: Spacing.md,
+    backgroundColor: Colors.surfaceLight,
+    paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
     borderWidth: 1,
     borderColor: Colors.border,
+    marginRight: Spacing.sm,
   },
-  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  chipText: { color: Colors.textSecondary, fontSize: FontSize.sm },
-  chipTextActive: { color: Colors.white },
+  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primaryLight },
+  chipText: { color: Colors.text, fontSize: FontSize.sm, fontWeight: '600' },
+  chipTextActive: { color: Colors.white, fontWeight: '700' },
   list: { paddingHorizontal: Spacing.lg },
   loader: { marginTop: Spacing.xxxl },
   error: { color: Colors.danger, textAlign: 'center', marginTop: Spacing.xl },
-  emptyText: { color: Colors.textMuted, textAlign: 'center', marginTop: Spacing.xxxl },
+  emptyContainer: { alignItems: 'center', marginTop: Spacing.xxxl },
+  emptyText: { color: Colors.textMuted, textAlign: 'center', marginBottom: Spacing.md },
+  retryBtn: { backgroundColor: Colors.surfaceLight, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderRadius: BorderRadius.md },
+  retryText: { color: Colors.primaryLight, fontWeight: '600' },
 });

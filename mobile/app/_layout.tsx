@@ -4,6 +4,7 @@ import { Provider, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { store, persistor, RootState } from '../store/store';
 import { Colors } from '../constants/theme';
 
@@ -48,16 +49,18 @@ function RootLayoutInner() {
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <PersistGate
-        loading={
-          <View style={styles.loading}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-          </View>
-        }
-        persistor={persistor}
-      >
-        <RootLayoutInner />
-      </PersistGate>
+      <SafeAreaProvider>
+        <PersistGate
+          loading={
+            <View style={styles.loading}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+            </View>
+          }
+          persistor={persistor}
+        >
+          <RootLayoutInner />
+        </PersistGate>
+      </SafeAreaProvider>
     </Provider>
   );
 }
