@@ -19,8 +19,8 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.inner}>
-        <Text style={styles.title}>NIFTY 50 AI</Text>
-        <Text style={styles.subtitle}>Stock Intelligence</Text>
+        <Text style={styles.title}>Intelly Stock Analyser</Text>
+        <Text style={styles.subtitle}>An AI powered Stock market analyser</Text>
 
         {error && <Text style={styles.error}>{error}</Text>}
 

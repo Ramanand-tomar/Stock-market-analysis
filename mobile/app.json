@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Intelly Stock Analyser",
+    "slug": "intelly-stock-analyser",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -35,7 +35,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d926b327-aff7-44cc-983b-55edffb28206"
+        "projectId": "5a8dcaf5-b1b6-40b4-b986-8164dcf7e1d7"
       }
     },
     "owner": "ramanandtomar07"

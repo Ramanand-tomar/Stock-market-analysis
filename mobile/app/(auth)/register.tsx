@@ -36,7 +36,7 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.inner}>
-        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.title}>Join Intelly</Text>
 
         {displayError && <Text style={styles.error}>{displayError}</Text>}
 

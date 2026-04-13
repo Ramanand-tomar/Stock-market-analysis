@@ -58,6 +58,11 @@ export default function ExploreScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <View style={styles.branding}>
+        <Text style={styles.appName}>Intelly Stock Analyser</Text>
+        <Text style={styles.tagline}>An AI powered Stock market analyser</Text>
+      </View>
+
       <TextInput
         style={styles.search}
         placeholder="Search by ticker or company..."
@@ -123,6 +128,9 @@ export default function ExploreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background, paddingTop: Spacing.sm },
+  branding: { paddingHorizontal: Spacing.lg, marginBottom: Spacing.md },
+  appName: { color: Colors.text, fontSize: FontSize.xxl, fontWeight: '800' },
+  tagline: { color: Colors.primaryLight, fontSize: FontSize.sm, fontWeight: '600', marginTop: 2 },
   search: {
     backgroundColor: Colors.surface,
     color: Colors.text,
