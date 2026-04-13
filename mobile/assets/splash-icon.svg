@@ -1,0 +1,28 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main icon circle -->
+  <circle cx="150" cy="150" r="120" fill="url(#splashGrad)"/>
+  <circle cx="150" cy="150" r="105" fill="none" stroke="white" stroke-opacity="0.1" stroke-width="2"/>
+
+  <!-- Chart trend line -->
+  <path d="M70 200 L95 175 L115 185 L135 160 L155 170 L175 135 L195 148" stroke="#10B981" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Chart area fill -->
+  <path d="M70 200 L95 175 L115 185 L135 160 L155 170 L175 135 L195 148 L195 215 L70 215 Z" fill="#10B981" fill-opacity="0.15"/>
+
+  <!-- Candlesticks -->
+  <line x1="85" y1="165" x2="85" y2="195" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+  <line x1="108" y1="155" x2="108" y2="183" stroke="#10B981" stroke-width="4" stroke-linecap="round"/>
+  <line x1="165" y1="140" x2="165" y2="170" stroke="#10B981" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- AI badge -->
+  <circle cx="188" cy="118" r="16" fill="#F59E0B"/>
+  <circle cx="188" cy="118" r="24" fill="none" stroke="#F59E0B" stroke-width="2" opacity="0.3"/>
+  <text x="188" y="124" font-size="14" font-weight="800" fill="white" text-anchor="middle" font-family="system-ui">AI</text>
+
+  <defs>
+    <linearGradient id="splashGrad" x1="30" y1="30" x2="270" y2="270">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1E40AF"/>
+    </linearGradient>
+  </defs>
+</svg>

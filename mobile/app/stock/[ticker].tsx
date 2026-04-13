@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,23 +33,35 @@ export default function StockDetailScreen() {
   const [stock, setStock] = useState<any>(null);
   const [indicators, setIndicators] = useState<any>(null);
   const [stockLoading, setStockLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const start = getStartDate(range);
   const { history, loading: histLoading } = useStockHistory(ticker!, start);
   const isWatched = watchlistTickers.includes(ticker!);
 
+  const fetchStockData = async () => {
+    if (!ticker) return;
+    try {
+      const [stockRes, indRes] = await Promise.all([
+        getStock(ticker),
+        getStockIndicators(ticker, start),
+      ]);
+      setStock(stockRes.data);
+      setIndicators(indRes.data?.[0] || null);
+    } catch {}
+  };
+
   useEffect(() => {
     if (!ticker) return;
     setStockLoading(true);
-    Promise.all([
-      getStock(ticker),
-      getStockIndicators(ticker, start),
-    ]).then(([stockRes, indRes]) => {
-      setStock(stockRes.data);
-      setIndicators(indRes.data?.[0] || null);
-    }).catch(() => {})
-      .finally(() => setStockLoading(false));
+    fetchStockData().finally(() => setStockLoading(false));
   }, [ticker]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchStockData();
+    setRefreshing(false);
+  };
 
   const toggleWatchlist = async () => {
     try {
@@ -92,7 +104,13 @@ export default function StockDetailScreen() {
           ),
         }}
       />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+        }
+      >
         {stock && (
           <View style={styles.header}>
             <Text style={styles.companyName}>{stock.company_name}</Text>

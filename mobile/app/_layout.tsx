@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { Provider, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import * as ExpoSplashScreen from 'expo-splash-screen';
 import { store, persistor, RootState } from '../store/store';
 import { Colors } from '../constants/theme';
+import { ToastProvider } from '../components/Toast';
+import SplashScreenView from '../components/SplashScreen';
+
+// Keep the native splash visible while we load resources
+ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
@@ -33,16 +39,30 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 function RootLayoutInner() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Hide the native splash once our custom one is rendering
+  useEffect(() => {
+    ExpoSplashScreen.hideAsync().catch(() => {});
+  }, []);
+
+  const handleSplashFinish = useCallback(() => {
+    setShowSplash(false);
+  }, []);
+
   return (
-    <AuthGuard>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.background },
-        }}
-      />
-    </AuthGuard>
+    <ToastProvider>
+      <AuthGuard>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.background },
+          }}
+        />
+      </AuthGuard>
+      {showSplash && <SplashScreenView onFinish={handleSplashFinish} />}
+    </ToastProvider>
   );
 }
 
@@ -53,7 +73,7 @@ export default function RootLayout() {
         <PersistGate
           loading={
             <View style={styles.loading}>
-              <ActivityIndicator size="large" color={Colors.primary} />
+              <View />
             </View>
           }
           persistor={persistor}
@@ -66,5 +86,5 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
+  loading: { flex: 1, backgroundColor: Colors.background },
 });

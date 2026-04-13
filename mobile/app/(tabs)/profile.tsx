@@ -36,6 +36,18 @@ export default function ProfileScreen() {
         <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
         <Text style={styles.logoutText}>Logout</Text>
       </Pressable>
+
+      {/* Developer credit */}
+      <View style={styles.devSection}>
+        <View style={styles.devDivider} />
+        <View style={styles.devCard}>
+          <Ionicons name="code-slash" size={18} color={Colors.primaryLight} />
+          <View>
+            <Text style={styles.devLabel}>Developed by</Text>
+            <Text style={styles.devName}>Ramanand Tomar</Text>
+          </View>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -65,4 +77,9 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
   },
   logoutText: { color: Colors.danger, fontSize: FontSize.lg, fontWeight: '700' },
+  devSection: { marginTop: 'auto', width: '100%', paddingBottom: Spacing.lg },
+  devDivider: { height: 1, backgroundColor: Colors.border, marginBottom: Spacing.lg },
+  devCard: { flexDirection: 'row' as const, alignItems: 'center' as const, justifyContent: 'center' as const, gap: Spacing.sm },
+  devLabel: { color: Colors.textMuted, fontSize: FontSize.xs },
+  devName: { color: Colors.text, fontSize: FontSize.md, fontWeight: '700' as const },
 });

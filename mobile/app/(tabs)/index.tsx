@@ -56,8 +56,8 @@ export default function ExploreScreen() {
     return result;
   }, [list, search, selectedSector]);
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+  const ListHeader = (
+    <View>
       <View style={styles.branding}>
         <Text style={styles.appName}>Intelly Stock Analyser</Text>
         <Text style={styles.tagline}>An AI powered Stock market analyser</Text>
@@ -70,7 +70,7 @@ export default function ExploreScreen() {
         value={search}
         onChangeText={setSearch}
       />
-      
+
       {/* Sector chips */}
       <View style={styles.chipRowContainer}>
         <ScrollView
@@ -92,36 +92,51 @@ export default function ExploreScreen() {
         </ScrollView>
       </View>
 
-      {loading ? (
+      {loading && !refreshing && (
         <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
-      ) : error ? (
-        <Text style={styles.error}>{error}</Text>
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.ticker}
-          renderItem={({ item }) => (
-            <StockCard
-              ticker={item.ticker}
-              companyName={item.company_name}
-              sector={item.sector}
-              onPress={() => router.push(`/stock/${item.ticker}`)}
-            />
-          )}
-          contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />
-          }
-          ListEmptyComponent={
+      )}
+
+      {!loading && error && (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.error}>{error}</Text>
+          <Pressable style={styles.retryBtn} onPress={fetchStocks}>
+            <Text style={styles.retryText}>Retry</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <FlatList
+        data={loading ? [] : filtered}
+        keyExtractor={(item) => item.ticker}
+        renderItem={({ item }) => (
+          <StockCard
+            ticker={item.ticker}
+            companyName={item.company_name}
+            sector={item.sector}
+            onPress={() => router.push(`/stock/${item.ticker}`)}
+          />
+        )}
+        contentContainerStyle={styles.list}
+        ListHeaderComponent={ListHeader}
+        stickyHeaderIndices={[]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+        }
+        ListEmptyComponent={
+          !loading && !error ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No stocks found</Text>
               <Pressable style={styles.retryBtn} onPress={fetchStocks}>
                 <Text style={styles.retryText}>Retry</Text>
               </Pressable>
             </View>
-          }
-        />
-      )}
+          ) : null
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -155,7 +170,7 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primaryLight },
   chipText: { color: Colors.text, fontSize: FontSize.sm, fontWeight: '600' },
   chipTextActive: { color: Colors.white, fontWeight: '700' },
-  list: { paddingHorizontal: Spacing.lg },
+  list: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxxl },
   loader: { marginTop: Spacing.xxxl },
   error: { color: Colors.danger, textAlign: 'center', marginTop: Spacing.xl },
   emptyContainer: { alignItems: 'center', marginTop: Spacing.xxxl },
