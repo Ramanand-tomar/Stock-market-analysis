@@ -3,9 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { store } from '../store/store';
 import { setCredentials, logout } from '../store/slices/authSlice';
 
-const API_BASE_URL = __DEV__
-  ? 'http://10.0.2.2:8000'   // Android emulator → host machine
-  : 'http://localhost:8000';
+const API_BASE_URL = 'https://stock-market-analysis-by6y.onrender.com';
 
 const client = axios.create({
   baseURL: API_BASE_URL,
