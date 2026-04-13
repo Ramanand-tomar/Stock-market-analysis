@@ -1,4 +1,4 @@
-# Environment
+# Environment (NEVER commit secrets)
 backend/.env
 .env
 
@@ -11,14 +11,6 @@ dist/
 build/
 .venv/
 venv/
-
-# ML artifacts (large files)
-ml/models/regression/*.pkl
-ml/models/classification/*.pkl
-ml/models/clustering/*.pkl
-ml/models/scaler.pkl
-ml/models/label_encoders.pkl
-ml/data/processed/*.parquet
 
 # Node
 mobile/node_modules/
@@ -34,3 +26,9 @@ mobile/dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Colab zip (generated, not needed in repo)
+Stock-market-analysis-colab.zip
+
+# Raw dataset CSV is large — keep parquet files instead
+Dataset/nifty50_historical_data.csv
