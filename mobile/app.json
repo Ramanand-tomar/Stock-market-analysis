@@ -31,6 +31,13 @@
     "plugins": [
       "expo-router",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d926b327-aff7-44cc-983b-55edffb28206"
+      }
+    },
+    "owner": "ramanandtomar07"
   }
 }
