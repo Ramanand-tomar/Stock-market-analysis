@@ -18,6 +18,27 @@ from app.models.sql_models import Stock, StockIndicator, StockPrice
 router = APIRouter(prefix="/stocks", tags=["stocks"])
 
 
+async def _resolve_ticker(ticker: str, db: AsyncSession) -> str | None:
+    """Normalise a user-provided ticker and return the canonical form
+    that exists in the Stock table, or None if no match is found.
+
+    Tries the input verbatim (uppercased) first, then with `.NS` appended.
+    """
+    candidate = ticker.upper()
+    result = await db.execute(select(Stock.ticker).where(Stock.ticker == candidate))
+    found = result.scalar_one_or_none()
+    if found:
+        return found
+
+    if not candidate.endswith(".NS"):
+        result = await db.execute(select(Stock.ticker).where(Stock.ticker == f"{candidate}.NS"))
+        found = result.scalar_one_or_none()
+        if found:
+            return found
+
+    return None
+
+
 @router.get("", response_model=PaginatedStocks)
 async def list_stocks(
     page: int = Query(1, ge=1),
@@ -43,17 +64,11 @@ async def list_stocks(
 
 @router.get("/{ticker}", response_model=StockResponse)
 async def get_stock(ticker: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Stock).where(Stock.ticker == ticker.upper()))
-    stock = result.scalar_one_or_none()
-    
-    # Try with .NS suffix if not found
-    if stock is None and not ticker.upper().endswith(".NS"):
-        result = await db.execute(select(Stock).where(Stock.ticker == f"{ticker.upper()}.NS"))
-        stock = result.scalar_one_or_none()
-        
-    if stock is None:
+    canonical = await _resolve_ticker(ticker, db)
+    if canonical is None:
         raise HTTPException(status_code=404, detail=f"Ticker {ticker} not found")
-    return stock
+    result = await db.execute(select(Stock).where(Stock.ticker == canonical))
+    return result.scalar_one()
 
 
 @router.get("/{ticker}/history", response_model=list[StockPriceResponse])
@@ -64,7 +79,11 @@ async def get_history(
     limit: int = Query(500, ge=1, le=5000),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(StockPrice).where(StockPrice.ticker == ticker)
+    canonical = await _resolve_ticker(ticker, db)
+    if canonical is None:
+        raise HTTPException(status_code=404, detail=f"Ticker {ticker} not found")
+
+    q = select(StockPrice).where(StockPrice.ticker == canonical)
     if start:
         q = q.where(StockPrice.date >= start)
     if end:
@@ -86,7 +105,11 @@ async def get_indicators(
     limit: int = Query(500, ge=1, le=5000),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(StockIndicator).where(StockIndicator.ticker == ticker)
+    canonical = await _resolve_ticker(ticker, db)
+    if canonical is None:
+        raise HTTPException(status_code=404, detail=f"Ticker {ticker} not found")
+
+    q = select(StockIndicator).where(StockIndicator.ticker == canonical)
     if start:
         q = q.where(StockIndicator.date >= start)
     if end:

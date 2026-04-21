@@ -62,14 +62,18 @@ export default function PredictScreen() {
   }, [current]);
 
   const handleRefresh = async () => {
-    const t = ticker.trim().toUpperCase();
-    if (!t || !current) return;
+    // Prefer the ticker shown by the visible prediction; fall back to the
+    // text-input value. If neither is set, the pull-to-refresh is a no-op
+    // but should still spin briefly so the user gets feedback.
+    const t = (current?.ticker || ticker).trim().toUpperCase();
     setRefreshing(true);
-    try {
-      const [predRes, explainRes] = await Promise.all([getPrediction(t), getExplanation(t)]);
-      dispatch(setPrediction(predRes.data));
-      dispatch(setExplanation(explainRes.data));
-    } catch {}
+    if (t) {
+      try {
+        const [predRes, explainRes] = await Promise.all([getPrediction(t), getExplanation(t)]);
+        dispatch(setPrediction(predRes.data));
+        dispatch(setExplanation(explainRes.data));
+      } catch {}
+    }
     setRefreshing(false);
   };
 

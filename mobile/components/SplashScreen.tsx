@@ -85,6 +85,16 @@ export default function SplashScreenView({ onFinish }: Props) {
   const fadeOut = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    // Track timers and animations so we can stop them if the component
+    // unmounts mid-sequence (e.g. user kills the app or fast-navigates).
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let finished = false;
+    const safeFinish = () => {
+      if (finished) return;
+      finished = true;
+      onFinish();
+    };
+
     // Phase 1: Logo springs in
     Animated.parallel([
       Animated.spring(logoScale, { toValue: 1, useNativeDriver: true, tension: 50, friction: 7 }),
@@ -92,38 +102,53 @@ export default function SplashScreenView({ onFinish }: Props) {
     ]).start();
 
     // Phase 2: Title slides up
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       Animated.parallel([
         Animated.timing(titleOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
         Animated.spring(titleTranslateY, { toValue: 0, useNativeDriver: true, tension: 60, friction: 10 }),
       ]).start();
-    }, 300);
+    }, 300));
 
     // Phase 3: Subtitle & tagline
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       Animated.timing(subtitleOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-    }, 600);
+    }, 600));
 
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       Animated.timing(taglineOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-    }, 800);
+    }, 800));
 
     // Phase 4: Shimmer across the logo
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       Animated.timing(shimmerTranslate, { toValue: SCREEN_W, duration: 800, useNativeDriver: true }).start();
-    }, 900);
+    }, 900));
 
     // Phase 5: Footer
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       Animated.timing(footerOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-    }, 1000);
+    }, 1000));
 
     // Phase 6: Fade out & finish
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       Animated.timing(fadeOut, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => {
-        onFinish();
+        safeFinish();
       });
-    }, 2400);
+    }, 2400));
+
+    // Cleanup: cancel pending timers and stop running animations to avoid
+    // setState-after-unmount warnings and double onFinish() calls.
+    return () => {
+      timers.forEach(clearTimeout);
+      logoScale.stopAnimation();
+      logoOpacity.stopAnimation();
+      titleOpacity.stopAnimation();
+      titleTranslateY.stopAnimation();
+      subtitleOpacity.stopAnimation();
+      taglineOpacity.stopAnimation();
+      shimmerTranslate.stopAnimation();
+      footerOpacity.stopAnimation();
+      fadeOut.stopAnimation();
+    };
   }, []);
 
   return (

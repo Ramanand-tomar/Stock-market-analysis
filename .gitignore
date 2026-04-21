@@ -32,3 +32,5 @@ Stock-market-analysis-colab.zip
 
 # Raw dataset CSV is large — keep parquet files instead
 Dataset/nifty50_historical_data.csv
+ml.zip
+PROJECT_REPORT.md

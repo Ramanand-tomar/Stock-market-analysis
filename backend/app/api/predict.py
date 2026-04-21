@@ -1,12 +1,18 @@
 """Prediction endpoints: predict and explain."""
 
+import logging
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.auth import get_current_user
+from app.core.database import get_mongo_db
 from app.ml.explainer import generate_insight, get_top_features
 from app.ml.inference import predict, _get_best_model_name
 from app.models.schemas import ExplainResponse, PredictionResponse
 from app.models.sql_models import User
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/predict", tags=["predict"])
 
@@ -22,6 +28,24 @@ async def predict_ticker(ticker: str, user: User = Depends(get_current_user)):
         )
 
     insight = generate_insight(ticker.upper())
+
+    # Log the prediction to MongoDB so /user/predictions can return history.
+    # Failures here must not break the user-facing response.
+    if not result.get("cached"):
+        try:
+            db = get_mongo_db()
+            await db.prediction_history.insert_one({
+                "user_id": user.id,
+                "ticker": ticker.upper(),
+                "predicted_close": result["predicted_close"],
+                "direction": result["direction"],
+                "confidence": result["confidence"],
+                "model_used": result["model_used"],
+                "insight": insight,
+                "created_at": datetime.now(timezone.utc),
+            })
+        except Exception as e:
+            logger.warning("Failed to log prediction for %s: %s", ticker, e)
 
     return PredictionResponse(
         ticker=ticker.upper(),

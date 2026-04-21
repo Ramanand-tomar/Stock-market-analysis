@@ -83,14 +83,28 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     timerRef.current = setTimeout(dismiss, config.duration || 3000);
   }, [dismiss]);
 
+  const MAX_QUEUE = 5;
   const show = useCallback((config: ToastConfig) => {
     const full = { ...config, type: config.type || 'info' as ToastType };
     if (isShowingRef.current) {
+      // Cap the queue so a flood of toasts (e.g. retry burst) doesn't grow
+      // memory unbounded. Drop oldest queued items beyond the limit.
+      if (queueRef.current.length >= MAX_QUEUE) {
+        queueRef.current.shift();
+      }
       queueRef.current.push(full);
     } else {
       showInternal(full);
     }
   }, [showInternal]);
+
+  // Cleanup pending timer and queue when the provider unmounts
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      queueRef.current = [];
+    };
+  }, []);
 
   const success = useCallback((message: string, title?: string) => show({ message, title, type: 'success' }), [show]);
   const error   = useCallback((message: string, title?: string) => show({ message, title, type: 'error', duration: 4000 }), [show]);

@@ -94,7 +94,15 @@ def _get_feature_cols() -> list[str]:
         if scaler and hasattr(scaler, "feature_names_in_"):
             _feature_cols = list(scaler.feature_names_in_)
         else:
-            # Fallback: load from train parquet columns
+            # Scaler is the source of truth for feature ordering. If it's
+            # missing the parquet column order may not match the training
+            # order, leading to silent garbage predictions. Log loudly.
+            logger.error(
+                "Scaler not found or missing feature_names_in_ attribute. "
+                "Falling back to parquet column order — predictions may be "
+                "unreliable. Re-run training to regenerate %s.",
+                MODELS_DIR / "scaler.pkl",
+            )
             train_path = DATA_DIR / "train.parquet"
             if train_path.exists():
                 df = pd.read_parquet(train_path, columns=None)

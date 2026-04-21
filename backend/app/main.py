@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api import admin, auth, insights, models, predict, stocks, user
+from app.core.config import settings
 from app.core.database import close_mongo, init_db, init_mongo
 from app.models import sql_models  # noqa: F401 — register ORM models with Base
 
@@ -27,12 +28,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS — wildcard "*" with allow_credentials=True is forbidden by the spec
+# and rejected by browsers. Use explicit allowed origins from env, else use a
+# safe default that supports local Expo dev + the deployed mobile app.
+_allowed_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
 )
 
 # Register routers
