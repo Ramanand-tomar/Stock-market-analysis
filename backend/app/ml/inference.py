@@ -38,13 +38,32 @@ def _load_metrics() -> dict:
     return _metrics
 
 
+# Classifiers known to produce degenerate "always UP" predictions on this dataset.
+# AdaBoost wins F1 because high recall × balanced base rate inflates F1, but it
+# predicts UP for 99.9% of rows which is useless to the end user.
+_DEGENERATE_CLASSIFIERS = {"adaboost"}
+
+
 def _get_best_model_name(model_type: str) -> str | None:
     metrics = _load_metrics()
     type_metrics = metrics.get(model_type, {})
+
+    if model_type == "classification":
+        # Prefer a balanced classifier over the metrics-flagged best when the
+        # flagged one is in the degenerate list. We score candidates by F1 but
+        # exclude the degenerate ones.
+        candidates = [
+            (name, m) for name, m in type_metrics.items()
+            if name not in _DEGENERATE_CLASSIFIERS
+        ]
+        if candidates:
+            best = max(candidates, key=lambda kv: kv[1].get("val", {}).get("f1", 0))
+            return best[0]
+
+    # Default behaviour: honour the "best" flag in metrics.json
     for name, m in type_metrics.items():
         if m.get("best"):
             return name
-    # Fallback: first available
     return next(iter(type_metrics), None)
 
 
@@ -149,14 +168,26 @@ def predict(ticker: str) -> dict | None:
         result["reg_model"] = "none"
 
     if clf_model:
-        direction = int(clf_model.predict(features)[0])
-        result["direction"] = direction
         result["clf_model"] = clf_name
 
+        # Use predict_proba + threshold instead of clf.predict() so that
+        # direction reflects the actual probability of UP, not the model's
+        # internal (often biased) decision rule.
         if hasattr(clf_model, "predict_proba"):
             proba = clf_model.predict_proba(features)[0]
-            result["confidence"] = float(max(proba))
+            # Locate the index of the "UP" class (= 1) safely
+            classes = list(getattr(clf_model, "classes_", [0, 1]))
+            up_idx = classes.index(1) if 1 in classes else 1
+            p_up = float(proba[up_idx])
+            # Threshold = 0.5 (honest 50/50 cutoff). Adjust per-deployment if
+            # the deployed model is known to be biased.
+            direction = 1 if p_up >= 0.5 else 0
+            # confidence = probability of the *predicted* class, not max(proba)
+            result["confidence"] = p_up if direction == 1 else (1.0 - p_up)
+            result["direction"] = direction
         else:
+            # Models without predict_proba — fall back to hard prediction
+            result["direction"] = int(clf_model.predict(features)[0])
             result["confidence"] = 0.5
     else:
         result["direction"] = 1
